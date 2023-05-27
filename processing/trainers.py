@@ -1,6 +1,8 @@
 import os
 import re
 import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
 
 
 class ModelTrainer:
@@ -19,6 +21,19 @@ class ModelTrainer:
         x_train, y_train = self.split_xy(train_data)
         x_test, y_test = self.split_xy(test_data)
 
+        (
+            X_test_enc,
+            y_test_enc,
+            test_rev_mapping,
+            test_label_enc,
+        ) = self.enc_labels(x_test, y_test)
+        (
+            x_train_enc,
+            y_train_enc,
+            train_rev_mapping,
+            train_label_enc,
+        ) = self.enc_labels(x_train, y_train)
+
     def rm_cols(self, data: pd.DataFrame) -> pd.DataFrame:
         cols_to_rm = [col for col in data.columns if re.search(self.rm_pattern, col)]
         data = data.drop(columns=cols_to_rm)
@@ -28,3 +43,12 @@ class ModelTrainer:
         x = data.drop(self.y_col_name, axis=1)
         y = data[self.y_col_name]
         return x, y
+
+    @staticmethod
+    def enc_labels(x: pd.DataFrame, y: pd.Series) \
+            -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
+        x = pd.get_dummies(x)
+        label_enc = LabelEncoder()
+        y_enc = label_enc.fit_transform(y)
+        rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)}
+        return x, y_enc, rev_mapping, label_enc
