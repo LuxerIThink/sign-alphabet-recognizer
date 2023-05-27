@@ -1,9 +1,12 @@
 import os
 import re
+import itertools
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+import matplotlib.pyplot as plt
 
 
 class ModelTrainer:
@@ -24,7 +27,6 @@ class ModelTrainer:
             rev_mapping_test,
             label_enc_test,
         )
-        print(y_test_decoded)
         return y_pred_labels, y_test_decoded
 
     def prepare_data(self, path: str) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
@@ -69,3 +71,35 @@ class ModelTrainer:
         ]
         y_test_dec = label_enc.inverse_transform(y_test)
         return y_pred_labels, y_test_dec
+
+    @staticmethod
+    def check_score(y_test_dec: pd.DataFrame, y_pred_labels: list[str]):
+        compare = pd.DataFrame({"Real": y_test_dec, "Pred": y_pred_labels})
+        pd.set_option("display.max_rows", None)
+        pd.set_option("display.max_columns", None)
+        similarity = (accuracy_score(compare["Real"], compare["Pred"]) * 100)
+        print(f"Similarity: {similarity:.2f}%")
+
+    @staticmethod
+    def plot_conf_matrix(y_pred_labels, y_test_decoded):
+        conf_matrix = confusion_matrix(y_test_decoded, y_pred_labels)
+        plt.figure(figsize=(8, 6))
+        classes = np.unique(np.concatenate((y_test_decoded, y_pred_labels)))
+        tick_marks = np.arange(len(classes))
+        thresh = conf_matrix.max() / 2
+        for i, j in itertools.product(
+                range(conf_matrix.shape[0]), range(conf_matrix.shape[1])
+        ):
+            plt.text(j, i, format(conf_matrix[i, j], "d"),
+                     horizontalalignment="center",
+                     color="white" if conf_matrix[i, j] > thresh else "black",
+                     )
+        plt.imshow(conf_matrix, interpolation="nearest", cmap=plt.colormaps['GnBu'])
+        plt.title("Confusion Matrix")
+        plt.colorbar()
+        plt.xticks(tick_marks, classes, rotation=45)
+        plt.yticks(tick_marks, classes)
+        plt.tight_layout()
+        plt.ylabel("True label")
+        plt.xlabel("Predicted label")
+        plt.show()
