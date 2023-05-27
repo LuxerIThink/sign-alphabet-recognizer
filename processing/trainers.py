@@ -12,27 +12,15 @@ class ModelTrainer:
         self.y_col_name = 'letter'
 
     def run(self, test_csv_path: str):
-        train_data = pd.read_csv(self.train_csv_path)
-        test_data = pd.read_csv(test_csv_path)
+        x_train, y_train, rev_mapping, label_enc = self.prepare_data(self.train_csv_path)
+        x_test, _, _, _ = self.prepare_data(test_csv_path)
 
-        train_data = self.rm_cols(train_data)
-        test_data = self.rm_cols(test_data)
-
-        x_train, y_train = self.split_xy(train_data)
-        x_test, y_test = self.split_xy(test_data)
-
-        (
-            X_test_enc,
-            y_test_enc,
-            test_rev_mapping,
-            test_label_enc,
-        ) = self.enc_labels(x_test, y_test)
-        (
-            x_train_enc,
-            y_train_enc,
-            train_rev_mapping,
-            train_label_enc,
-        ) = self.enc_labels(x_train, y_train)
+    def prepare_data(self, path: str) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
+        data = pd.read_csv(path)
+        data = self.rm_cols(data)
+        x, y = self.split_xy(data)
+        x_enc, y_enc, rev_mapping, label_enc = self.enc_labels(x, y)
+        return x_enc, y_enc, rev_mapping, label_enc
 
     def rm_cols(self, data: pd.DataFrame) -> pd.DataFrame:
         cols_to_rm = [col for col in data.columns if re.search(self.rm_pattern, col)]
