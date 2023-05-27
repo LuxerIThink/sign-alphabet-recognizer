@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
 
 
 class ModelTrainer:
@@ -10,10 +11,12 @@ class ModelTrainer:
         self.train_csv_path = f'{os.path.dirname(__file__)}/test/dataset/train_data.csv'
         self.rm_pattern = r"^Unnamed: 0|world_landmark_\d+\.[xyz]$"
         self.y_col_name = 'letter'
+        self.rand_state = 42
 
     def run(self, test_csv_path: str):
         x_train, y_train, rev_mapping, label_enc = self.prepare_data(self.train_csv_path)
         x_test, _, _, _ = self.prepare_data(test_csv_path)
+        clf = self.train_clf(x_train, y_train)
 
     def prepare_data(self, path: str) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
         data = pd.read_csv(path)
@@ -40,3 +43,8 @@ class ModelTrainer:
         y_enc = label_enc.fit_transform(y)
         rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)}
         return x, y_enc, rev_mapping, label_enc
+
+    def train_clf(self, x_train: pd.DataFrame, y_train: np.ndarray) -> DecisionTreeClassifier:
+        clf = DecisionTreeClassifier(criterion="entropy", random_state=self.rand_state)
+        clf.fit(x_train, y_train)
+        return clf
