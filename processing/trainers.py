@@ -24,8 +24,8 @@ class ModelTrainer:
             clf,
             x_test,
             y_test,
-            rev_mapping_test,
-            label_enc_test,
+            rev_mapping_train,
+            label_enc_train,
         )
         return y_pred_labels, y_test_decoded
 
@@ -42,17 +42,22 @@ class ModelTrainer:
         return data
 
     def split_xy(self, data) -> tuple[pd.DataFrame, pd.Series]:
-        x = data.drop(self.y_col_name, axis=1)
-        y = data[self.y_col_name]
+        y = None
+        x = data
+        if self.y_col_name in data.columns:
+            y = x[self.y_col_name]
+            x = x.drop(self.y_col_name, axis=1)
         return x, y
 
     @staticmethod
-    def enc_labels(x: pd.DataFrame, y: pd.Series) \
-            -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
+    def enc_labels(x: pd.DataFrame, y: pd.Series = None) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
         x = pd.get_dummies(x)
         label_enc = LabelEncoder()
-        y_enc = label_enc.fit_transform(y)
-        rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)}
+        y_enc = None
+        rev_mapping = None
+        if y is not None:
+            y_enc = label_enc.fit_transform(y)
+            rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)}
         return x, y_enc, rev_mapping, label_enc
 
     def train_clf(self, x_train: pd.DataFrame, y_train: np.ndarray) -> SVC:
@@ -62,14 +67,17 @@ class ModelTrainer:
 
     @staticmethod
     def predict(model, x_test, y_test, rev_mapping, label_enc):
+        y_test_dec = None
         y_pred = model.predict(x_test)
-        y_pred_labels = [
-            rev_mapping[int(round(label))]
-            if int(round(label)) in rev_mapping
-            else "Unknown"
-            for label in y_pred
-        ]
-        y_test_dec = label_enc.inverse_transform(y_test)
+        y_pred_labels = []
+        for label in y_pred:
+            rounded_label = int(round(label))
+            if rounded_label in rev_mapping:
+                y_pred_labels.append(rev_mapping[rounded_label])
+            else:
+                y_pred_labels.append("Unknown")
+        if y_test is not None:
+            y_test_dec = label_enc.inverse_transform(y_test)
         return y_pred_labels, y_test_dec
 
     @staticmethod
