@@ -38,26 +38,23 @@ class ModelTrainer:
 
     def rm_cols(self, data: pd.DataFrame) -> pd.DataFrame:
         cols_to_rm = [col for col in data.columns if re.search(self.rm_pattern, col)]
-        data = data.drop(columns=cols_to_rm)
-        return data
+        return data.drop(columns=cols_to_rm)
 
     def split_xy(self, data) -> tuple[pd.DataFrame, pd.Series]:
-        y = None
+        y = data.pop(self.y_col_name) if self.y_col_name in data.columns else None
         x = data
-        if self.y_col_name in data.columns:
-            y = x[self.y_col_name]
-            x = x.drop(self.y_col_name, axis=1)
         return x, y
 
     @staticmethod
     def enc_labels(x: pd.DataFrame, y: pd.Series = None) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
         x = pd.get_dummies(x)
         label_enc = LabelEncoder()
-        y_enc = None
-        rev_mapping = None
         if y is not None:
-            y_enc = label_enc.fit_transform(y)
-            rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)}
+            y_enc = label_enc.fit_transform(y) if y.dtype == 'object' else y.values
+            rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)} if y.dtype == 'object' else None
+        else:
+            y_enc = None
+            rev_mapping = None
         return x, y_enc, rev_mapping, label_enc
 
     def train_clf(self, x_train: pd.DataFrame, y_train: np.ndarray) -> SVC:
@@ -67,17 +64,13 @@ class ModelTrainer:
 
     @staticmethod
     def predict(model, x_test, y_test, rev_mapping, label_enc):
-        y_test_dec = None
         y_pred = model.predict(x_test)
-        y_pred_labels = []
-        for label in y_pred:
-            rounded_label = int(round(label))
-            if rounded_label in rev_mapping:
-                y_pred_labels.append(rev_mapping[rounded_label])
-            else:
-                y_pred_labels.append("Unknown")
-        if y_test is not None:
-            y_test_dec = label_enc.inverse_transform(y_test)
+        y_pred_labels = np.where(
+            np.isin(np.round(y_pred).astype(int), list(rev_mapping.keys())),
+            [rev_mapping.get(int(round(label)), "Unknown") for label in y_pred],
+            "Unknown"
+        )
+        y_test_dec = label_enc.inverse_transform(y_test) if y_test is not None else None
         return y_pred_labels, y_test_dec
 
     @staticmethod
