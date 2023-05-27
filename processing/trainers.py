@@ -4,7 +4,7 @@ import itertools
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix
 import matplotlib.pyplot as plt
 
@@ -55,8 +55,8 @@ class ModelTrainer:
         rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)}
         return x, y_enc, rev_mapping, label_enc
 
-    def train_clf(self, x_train: pd.DataFrame, y_train: np.ndarray) -> DecisionTreeClassifier:
-        clf = DecisionTreeClassifier(criterion="entropy", random_state=self.rand_state)
+    def train_clf(self, x_train: pd.DataFrame, y_train: np.ndarray) -> SVC:
+        clf = SVC(kernel="linear", C=250, gamma='auto', random_state=self.rand_state)
         clf.fit(x_train, y_train)
         return clf
 
