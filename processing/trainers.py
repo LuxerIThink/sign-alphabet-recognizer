@@ -14,9 +14,18 @@ class ModelTrainer:
         self.rand_state = 42
 
     def run(self, test_csv_path: str):
-        x_train, y_train, rev_mapping, label_enc = self.prepare_data(self.train_csv_path)
-        x_test, _, _, _ = self.prepare_data(test_csv_path)
+        x_train, y_train, rev_mapping_train, label_enc_train = self.prepare_data(self.train_csv_path)
+        x_test, y_test, rev_mapping_test, label_enc_test = self.prepare_data(test_csv_path)
         clf = self.train_clf(x_train, y_train)
+        y_pred_labels, y_test_decoded = self.predict(
+            clf,
+            x_test,
+            y_test,
+            rev_mapping_test,
+            label_enc_test,
+        )
+        print(y_test_decoded)
+        return y_pred_labels, y_test_decoded
 
     def prepare_data(self, path: str) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
         data = pd.read_csv(path)
@@ -48,3 +57,15 @@ class ModelTrainer:
         clf = DecisionTreeClassifier(criterion="entropy", random_state=self.rand_state)
         clf.fit(x_train, y_train)
         return clf
+
+    @staticmethod
+    def predict(model, x_test, y_test, rev_mapping, label_enc):
+        y_pred = model.predict(x_test)
+        y_pred_labels = [
+            rev_mapping[int(round(label))]
+            if int(round(label)) in rev_mapping
+            else "Unknown"
+            for label in y_pred
+        ]
+        y_test_dec = label_enc.inverse_transform(y_test)
+        return y_pred_labels, y_test_dec
