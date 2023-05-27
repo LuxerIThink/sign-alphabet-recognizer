@@ -17,15 +17,12 @@ class ModelTrainer:
         self.rand_state = 42
 
     def run(self, test_csv_path: str):
-        x_train, y_train, rev_mapping_train, label_enc_train = self.prepare_data(self.train_csv_path)
+        x_train, y_train, rev_mapping_train, label_enc_train = \
+            self.prepare_data(self.train_csv_path)
         x_test, y_test, rev_mapping_test, label_enc_test = self.prepare_data(test_csv_path)
         clf = self.train_clf(x_train, y_train)
         y_pred_labels, y_test_decoded = self.predict(
-            clf,
-            x_test,
-            y_test,
-            rev_mapping_train,
-            label_enc_train,
+            clf, x_test, y_test, rev_mapping_train, label_enc_train,
         )
         return y_pred_labels, y_test_decoded
 
@@ -46,12 +43,14 @@ class ModelTrainer:
         return x, y
 
     @staticmethod
-    def enc_labels(x: pd.DataFrame, y: pd.Series = None) -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
+    def enc_labels(x: pd.DataFrame, y: pd.Series = None) \
+            -> tuple[pd.DataFrame, np.ndarray, dict, LabelEncoder]:
         x = pd.get_dummies(x)
         label_enc = LabelEncoder()
         if y is not None:
             y_enc = label_enc.fit_transform(y) if y.dtype == 'object' else y.values
-            rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)} if y.dtype == 'object' else None
+            rev_mapping = {i: label for i, label in enumerate(label_enc.classes_)} \
+                if y.dtype == 'object' else None
         else:
             y_enc = None
             rev_mapping = None
@@ -63,8 +62,9 @@ class ModelTrainer:
         return clf
 
     @staticmethod
-    def predict(model, x_test, y_test, rev_mapping, label_enc):
-        y_pred = model.predict(x_test)
+    def predict(clf, x_test: pd.DataFrame, y_test: np.ndarray, rev_mapping: dict,
+                label_enc: LabelEncoder) -> tuple[np.ndarray, np.ndarray]:
+        y_pred = clf.predict(x_test)
         y_pred_labels = np.where(
             np.isin(np.round(y_pred).astype(int), list(rev_mapping.keys())),
             [rev_mapping.get(int(round(label)), "Unknown") for label in y_pred],
@@ -82,12 +82,12 @@ class ModelTrainer:
         print(f"Similarity: {similarity:.2f}%")
 
     @staticmethod
-    def plot_conf_matrix(y_pred_labels, y_test_decoded):
+    def plot_conf_matrix(y_pred_labels: np.ndarray, y_test_decoded: np.ndarray):
         conf_matrix = confusion_matrix(y_test_decoded, y_pred_labels)
-        plt.figure(figsize=(8, 6))
         classes = np.unique(np.concatenate((y_test_decoded, y_pred_labels)))
         tick_marks = np.arange(len(classes))
         thresh = conf_matrix.max() / 2
+        plt.figure(figsize=(8, 6))
         for i, j in itertools.product(
                 range(conf_matrix.shape[0]), range(conf_matrix.shape[1])
         ):
