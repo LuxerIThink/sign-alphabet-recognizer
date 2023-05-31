@@ -1,5 +1,5 @@
 import sys
-from processing.trainers import ModelTrainer
+from processing.predictors import SignAlphabetPredictor
 import numpy as np
 
 
@@ -11,8 +11,6 @@ def save_file(data: np.ndarray):
 if __name__ == '__main__':
     test_csv_path = sys.argv[1]
     output_csv_path = sys.argv[2]
-    trainer = ModelTrainer()
-    y_pred_labels, y_test_decoded = trainer.run(test_csv_path)
-    # trainer.check_score(y_test_decoded, y_pred_labels)
-    # trainer.plot_conf_matrix(y_pred_labels, y_test_decoded)
+    trainer = SignAlphabetPredictor()
+    y_pred_labels = trainer.run(test_csv_path)
     save_file(y_pred_labels)
