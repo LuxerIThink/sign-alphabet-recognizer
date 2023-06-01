@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 import matplotlib.pyplot as plt
 import itertools
 import pytest
 from subprocess import check_output
 from pathlib import Path
+import time
 
 
 @pytest.fixture
@@ -20,12 +21,17 @@ def run_main():
 def test_reproduction_percentage(run_main):
     file_path = Path(__file__).resolve().parent
     main_path = file_path.parent / "Pawlowski_Adam.py"
-    data_file = file_path / 'test' / 'datasets' / 'test1_no_y_data.csv'
-    data_file_with_y = file_path / 'test' / 'datasets' / 'test1_data.csv'
+    data_file = file_path / 'test' / 'datasets' / 'test2_data.csv'
+    data_file_with_y = file_path / 'test' / 'datasets' / 'test2_data.csv'
     output_file = file_path.parent / "output.txt"
     y_column = 'letter'
 
+    start_time = time.time()
+
     _ = run_main(main_path, data_file, output_file)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
 
     data = pd.read_csv(data_file_with_y)
 
@@ -34,8 +40,21 @@ def test_reproduction_percentage(run_main):
     with open(output_file, 'r') as f:
         y_pred_labels = f.read().splitlines()
 
+    y_test_decoded = y_test_decoded.astype(str).values.tolist()
+
+    # print('\n')
+    # print('y_test_decoded:\n', y_test_decoded)
+    # print('len(y_test_decode: )', len(y_test_decoded))
+    # print('y_pred_labels:\n', y_pred_labels)
+    # print('len(y_pred_labels):', len(y_pred_labels))
+
     similarity = accuracy_score(y_test_decoded, y_pred_labels) * 100
+    f1 = f1_score(y_test_decoded, y_pred_labels, average='weighted')
+
+    print(f"\n")
+    print(f"Elapsed Time: {elapsed_time} seconds")
     print(f"Reproduction Percentage: {similarity:.2f}%")
+    print(f"F1 Score: {f1:.2f}")
 
     plot_conf_matrix(y_pred_labels, y_test_decoded)
 
