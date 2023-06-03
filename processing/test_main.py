@@ -21,8 +21,8 @@ def run_main():
 def test_reproduction_percentage(run_main):
     file_path = Path(__file__).resolve().parent
     main_path = file_path.parent / "Pawlowski_Adam.py"
-    data_file = file_path / 'test' / 'datasets' / 'test2_data.csv'
-    data_file_with_y = file_path / 'test' / 'datasets' / 'test2_data.csv'
+    data_file = file_path / 'test' / 'datasets' / 'test1_data.csv'
+    data_file_with_y = file_path / 'test' / 'datasets' / 'test1_data.csv'
     output_file = file_path.parent / "output.txt"
     y_column = 'letter'
 
