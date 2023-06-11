@@ -3,8 +3,8 @@ from processing.predictors import SignAlphabetPredictor
 import numpy as np
 
 
-def save_file(data: np.ndarray, output_csv_path: str):
-    with open(output_csv_path, 'w') as file:
+def save_file(data: np.ndarray, output_path: str):
+    with open(output_path, 'w') as file:
         file.write('\n'.join(data))
 
 
