@@ -8,7 +8,7 @@ import joblib
 class SignAlphabetModel:
 
     def __init__(self, rm_cols_pattern: str = None, y_name: str = None, state: int = None):
-        self.rm_cols_pattern = rm_cols_pattern or r"^Unnamed: 0|headness.*|world_landmark_\d+\.[xyz]$"
+        self.rm_cols_pattern = rm_cols_pattern or r"^Unnamed: 0|hand*|world_landmark_\d+\.[xyz]$"
         self.y_name = y_name or 'letter'
         self.state = state or 42
 
@@ -49,8 +49,8 @@ class SignAlphabetModel:
                 iqr = q3 - q1
 
                 # Define the lower and upper bounds
-                lower_bound = q1 - 2.8 * iqr
-                upper_bound = q3 + 2.8 * iqr
+                lower_bound = q1 - 5 * iqr
+                upper_bound = q3 + 5 * iqr
 
                 # Filter the column's values within the IQR range
                 df_letter = df_letter[(df_letter[column] >= lower_bound) & (df_letter[column] <= upper_bound)]
@@ -73,5 +73,5 @@ class SignAlphabetModel:
 
 if __name__ == '__main__':
     model = SignAlphabetModel()
-    clf = model.create_model('test/datasets/majority_data.csv')
+    clf = model.create_model('test/datasets/all_data.csv')
     joblib.dump(clf, 'model.pkl')

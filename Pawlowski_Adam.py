@@ -1,16 +1,37 @@
-import sys
+import argparse
+import pathlib
+
+import pandas as pd
+from sklearn.metrics import accuracy_score
+
 from processing.predictors import SignAlphabetPredictor
-import numpy as np
 
 
-def save_file(data: np.ndarray, output_path: str):
-    with open(output_path, 'w') as file:
-        file.write('\n'.join(data))
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input_file', type=str)
+    parser.add_argument('results_file', type=str)
+    args = parser.parse_args()
+
+    input_file = pathlib.Path(args.input_file)
+    results_file = pathlib.Path(args.results_file)
+
+    data = pd.read_csv(input_file, sep=',')
+
+    output_column_name = ['letter']
+
+    gt_data = data[output_column_name]
+    input_data = data.drop(columns=output_column_name)
+
+    trainer = SignAlphabetPredictor()
+    predicted_data = trainer.run(input_data)
+
+    # sample for calculating accuracy of the prediction
+    print(accuracy_score(gt_data, predicted_data))
+
+    predicted_data.to_csv(results_file, sep='\t', encoding='utf-8', index=False)
 
 
 if __name__ == '__main__':
-    test_csv_path = sys.argv[1]
-    output_csv_path = sys.argv[2]
-    trainer = SignAlphabetPredictor()
-    y_pred_labels = trainer.run(test_csv_path)
-    save_file(y_pred_labels, output_csv_path)
+    main()
+

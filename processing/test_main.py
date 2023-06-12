@@ -21,8 +21,8 @@ def run_main():
 def test_reproduction_percentage(run_main):
     file_path = Path(__file__).resolve().parent
     main_path = file_path.parent / "Pawlowski_Adam.py"
-    data_file = file_path / 'test' / 'datasets' / 'test1_data.csv'
-    data_file_with_y = file_path / 'test' / 'datasets' / 'test1_data.csv'
+    data_file = file_path.parent / 'data' / 'sample_dataset.csv'
+    data_file_with_y = file_path.parent / 'data' / 'sample_dataset.csv'
     output_file = file_path.parent / "output.txt"
     y_column = 'letter'
 
@@ -37,10 +37,10 @@ def test_reproduction_percentage(run_main):
 
     y_test_decoded = data[y_column]
 
-    with open(output_file, 'r') as f:
-        y_pred_labels = f.read().splitlines()
+    output_data = pd.read_csv(output_file)
 
-    y_test_decoded = y_test_decoded.astype(str).values.tolist()
+    y_pred_labels = output_data[y_column]
+
 
     # print('\n')
     # print('y_test_decoded:\n', y_test_decoded)
